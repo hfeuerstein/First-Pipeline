@@ -1,28 +1,44 @@
 #!/usr/bin/env bash
 
-# Basic bash script for pre-processing fastq files with quality control (FastQC), adapter-trimming (Trimmomatic), alignment (STAR) and quantification (featurecount in R) 
-# Input: Fastq file pair: #1 = read1; #2 = read 2
-# Trimmomatic: requires NexteraPE-PE.fa in the directory => path: ~/miniconda3/pkgs/trimmomatic-0.39-hdfd78af_2/share/trimmomatic-0.39-2/adapters/NexteraPE-PE.fa  
+###############################################
+# Function "preprocess": basic bash script for preprocessing Fastq-files incl: 
+# 	- quality control (FastQC)
+#	- adapter trimming (trimmomatic) for NexteraPE-PE
+#	- alignment (STAR)
+#	- quantification (HTSeq)
+#
+# REQUIREMENTS:
+#  a) packages: fastqc, trimmomatic, star, htseq 
+#  b) files to be stored in a file "required" in current workign directory: 
+#		- NexteraPE-PE.fa: avaibale via  ~/miniconda3/pkgs/trimmomatic-0.39-hdfd78af_2/share/trimmomatic-0.39-2/adapters/NexteraPE-PE.fa
+#		- GTF file for annotation: with name *annotation.gtf
+#		- folder "index" with indexed genome/subset (from STAR)
+#
+# INPUT: two fastq files (r1 and r2)
+##############################################
+
 
 function preprocess {
-	# Makes for each file input (r1 and r2) a new directory and stores the QC files in it 
-	for file in $@
-	do
-		mkdir fastqc_"$file"
-		fastqc -o fastqc_"$file" $file
-	done
-	# trimms read1 and read2 fastq files for NexteraPE adapters and stores the suriving sequences in the current directory and the discarding reads in dir:discarded sequences
-	mkdir discarded_sequences 
+	# Choose prefixes for alignment output files:
+	read -p "Choose file prefixes:" answer
+	mkdir fastqc discarded_seq alignment_results counts
+	
+	#1) Quality Control with FastQC
+	fastqc -o fastqc $@
+
+	#2) Adapter trimming with trimmomatic: 
 	trimmomatic PE $1 $2 \
 		"$1"_trim ./discarded_sequences/"$1"_un.trim \
 		"$2"_trim ./discarded_sequences/"$2"_un.trim \
-		ILLUMINACLIP:NexteraPE-PE.fa:2:40:15
+		ILLUMINACLIP:./required/NexteraPE-PE.fa:2:40:15
 
-	# Alignment: requires indexed genome file in current directory
-	mkdir alignment_results
-	echo: "Name prefix for outputfiles_"
-	read;
-	STAR --runThreadN 6 --genomeDIR . --readFilesIn $1 $2 --outFileNamePrefix ./alignment_results/${REPLY} --outSAMtype BAM SortedByCoordinate
-	samtools index ./alignment_results/*.bam
+	#3) Alignment with STAR
+	STAR --runThreadN 6 --genomeDir ./required/index --readFilesIn $1 $2 --outFileNamePrefix ./alignment_results/${answer}_ --outSAMtype BAM SortedByCoordinate
 
+	#4) Quantification with HTSeq:
+	htseq-count --format=bam --order=pos --stranded=no ./alignment_results/*out.bam ./required/*annotation.gtf > ./counts/count_table.tab 
 }
+
+
+
+
