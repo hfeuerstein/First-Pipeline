@@ -18,11 +18,11 @@ function preprocess {
 		"$2"_trim ./discarded_sequences/"$2"_un.trim \
 		ILLUMINACLIP:NexteraPE-PE.fa:2:40:15
 
-	# Alignment: requires indexed genome file in current directory
+	# Alignment: requires indexed genome file "index" in current directory (create index with STAR) 
 	mkdir alignment_results
 	echo: "Name prefix for outputfiles_"
 	read;
-	STAR --runThreadN 6 --genomeDIR . --readFilesIn $1 $2 --outFileNamePrefix ./alignment_results/${REPLY} --outSAMtype BAM SortedByCoordinate
+	STAR --runThreadN 6 --genomeDir index --readFilesIn $1 $2 --outFileNamePrefix ./alignment_results/${REPLY} --outSAMtype BAM SortedByCoordinate
 	samtools index ./alignment_results/*.bam
 
 }
