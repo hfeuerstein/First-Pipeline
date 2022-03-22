@@ -28,12 +28,12 @@ function preprocess {
 
 	#2) Adapter trimming with trimmomatic: 
 	trimmomatic PE $1 $2 \
-		"$1"_trim ./discarded_sequences/"$1"_un.trim \
-		"$2"_trim ./discarded_sequences/"$2"_un.trim \
+		${answer}_r1_trim ./discarded_seq/${answer}_r1_un.trim \
+		${answer}_r2_trim ./discarded_seq/${answer}_r2_un.trim \
 		ILLUMINACLIP:./required/NexteraPE-PE.fa:2:40:15
 
 	#3) Alignment with STAR
-	STAR --runThreadN 6 --genomeDir ./required/index --readFilesIn $1 $2 --outFileNamePrefix ./alignment_results/${answer}_ --outSAMtype BAM SortedByCoordinate
+	STAR --runThreadN 6 --genomeDir ./required/index --readFilesIn *r1_trim *r2_trim --outFileNamePrefix ./alignment_results/${answer}_ --outSAMtype BAM SortedByCoordinate
 
 	#4) Quantification with HTSeq:
 	htseq-count --format=bam --order=pos --stranded=no ./alignment_results/*out.bam ./required/*annotation.gtf > ./counts/count_table.tab 
