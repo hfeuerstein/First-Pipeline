@@ -39,10 +39,4 @@ RUN conda install htseq
 
 RUN conda install samtools=1.9
 
-# Copy Script into container and ...
-COPY ./pipeline_script.sh /
-RUN chmod +x /pipeline_script.sh
-#ENTRYPOINT?? ["/pipeline_script.sh"]
-#??? CMD 
-
 
