@@ -11,7 +11,8 @@ ARG PATH="/root/miniconda3/bin:${PATH}"
 
 RUN apt-get update 
 RUN apt-get install nano
-#???
+
+# Install wget command 
 RUN apt-get install -y wget && rm -rf /var/lib/apt/lists/*
 
 #Install miniconda3 
@@ -25,19 +26,12 @@ RUN conda config --add channels defaults
 RUN conda config --add channels bioconda 
 RUN conda config --add channels conda-forge
 
-
-
-# Successful installation
-#RUN conda --version
-
 # Installation of packages for bash script: 
 RUN conda install fastqc
 
 RUN conda install trimmomatic 
 
 RUN conda install star
-
-
 
 RUN conda install python=3.7.8
 
